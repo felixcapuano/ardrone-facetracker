@@ -1,69 +1,42 @@
-#!/usr/bin/env python
-
-import cv2
 import numpy as np
+import cv2
 
-# Read Image
-im = cv2.imread("headPose.jpg");
-size = im.shape
+cap = cv2.VideoCapture(0)
+
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+profile_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_profileface.xml')
+eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml')
+
+while(True):
+    # Capture frame-by-frame
+    ret, frame = cap.read()
+
+    # Our operations on the frame come here
+    #gray = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     
-#2D image points. If you change the image, you need to change vector
-image_points = np.array([
-                            (359, 391),     # Nose tip
-                            (399, 561),     # Chin
-                            (337, 297),     # Left eye left corner
-                            (513, 301),     # Right eye right corne
-                            (345, 465),     # Left Mouth corner
-                            (453, 469)      # Right mouth corner
-                        ], dtype="double")
+    faces = face_cascade.detectMultiScale(frame, 1.3, 5)
+    profiles = profile_cascade.detectMultiScale(frame, 1.3, 5)
+    
+    for (x,y,w,h) in profiles:
+        gray = cv2.rectangle(frame,(x,y),(x+w,y+h),(255,0,0),2)
+        roi_gray = gray[y:y+h, x:x+w]
+        roi_color = gray[y:y+h, x:x+w]
+        
+    for (x,y,w,h) in faces:
+        gray = cv2.rectangle(frame,(x,y),(x+w,y+h),(255,0,0),2)
+        roi_gray = gray[y:y+h, x:x+w]
+        roi_color = gray[y:y+h, x:x+w]
+     
+        eyes = eye_cascade.detectMultiScale(roi_gray)
+        for (ex,ey,ew,eh) in eyes:
+            cv2.rectangle(roi_color,(ex,ey),(ex+ew,ey+eh),(0,255,0),2)
+            
+    
+    # Display the resulting frame
+    cv2.imshow('frame',frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
 
-# 3D model points.
-model_points = np.array([
-                            (0.0, 0.0, 0.0),             # Nose tip
-                            (0.0, -330.0, -65.0),        # Chin
-                            (-225.0, 170.0, -135.0),     # Left eye left corner
-                            (225.0, 170.0, -135.0),      # Right eye right corne
-                            (-150.0, -150.0, -125.0),    # Left Mouth corner
-                            (150.0, -150.0, -125.0)      # Right mouth corner
-                        
-                        ])
-
-
-# Camera internals
-
-focal_length = size[1]
-center = (size[1]/2, size[0]/2)
-camera_matrix = np.array(
-                         [[focal_length, 0, center[0]],
-                         [0, focal_length, center[1]],
-                         [0, 0, 1]], dtype = "double"
-                         )
-
-print "Camera Matrix :\n {0}".format(camera_matrix);
-
-dist_coeffs = np.zeros((4,1)) # Assuming no lens distortion
-(success, rotation_vector, translation_vector) = cv2.solvePnP(model_points, image_points, camera_matrix, dist_coeffs, flags=cv2.SOLVEPNP_ITERATIVE)
-
-print "Rotation Vector:\n {0}".format(rotation_vector)
-print "Translation Vector:\n {0}".format(translation_vector)
-
-
-# Project a 3D point (0, 0, 1000.0) onto the image plane.
-# We use this to draw a line sticking out of the nose
-
-
-(nose_end_point2D, jacobian) = cv2.projectPoints(np.array([(0.0, 0.0, 1000.0)]), rotation_vector, translation_vector, camera_matrix, dist_coeffs)
-
-for p in image_points:
-    cv2.circle(im, (int(p[0]), int(p[1])), 3, (0,0,255), -1)
-
-
-p1 = ( int(image_points[0][0]), int(image_points[0][1]))
-p2 = ( int(nose_end_point2D[0][0][0]), int(nose_end_point2D[0][0][1]))
-
-cv2.line(im, p1, p2, (255,0,0), 2)
-
-
-# Display image
-cv2.imshow("Output", im);
-cv2.waitKey(0);
+# When everything done, release the capture
+cap.release()
+cv2.destroyAllWindows()
