@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 
 
-dirFace = "/home/mammoth/catkin_ws/src/facetracker2/lib/cv2/haarcascade_frontalface_default.xml"
+dirFace = "/home/mammoth/catkin_ws/src/facetracker/lib/cv2/haarcascade_frontalface_default.xml"
 face_cascade = cv2.CascadeClassifier(dirFace)
 
 def face_detection(frame):
