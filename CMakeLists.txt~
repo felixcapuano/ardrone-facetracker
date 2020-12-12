@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(facetracker2)
+project(facetracker)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -10,7 +10,6 @@ project(facetracker2)
 find_package(catkin REQUIRED COMPONENTS
   ardrone_autonomy
   cv_bridge
-  OpenCV
 )
 
 include_directories($(OpenCV_INCLUDE_DIRS))
