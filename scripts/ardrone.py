@@ -30,6 +30,9 @@ class ARDrone:
     navdata = None
     navdata_ready = False
 
+    images_callback = None
+    navdata_callback = None
+
     def __init__(self, verbose=True):
         self.verbose = verbose
 
@@ -38,9 +41,6 @@ class ARDrone:
         self.landing_pub = rospy.Publisher( "/ardrone/land", Empty, queue_size=10)
         self.move_pub = rospy.Publisher( "/cmd_vel", Twist, queue_size=10)  # Publish commands to drone
         self.reset_pub = rospy.Publisher( "/ardrone/reset", Empty, queue_size=10)
-
-        # image
-        self.images_callback = None
 
     def move(self, speed=[0.0, 0.0, 0.0], orient=[0.0, 0.0, 0.0], period=2):
         print("MOVE: {} seconds [direction={} , orientation={}]".format(
@@ -58,7 +58,7 @@ class ARDrone:
 
         self._freeze(period, self.move_pub, vel_msg)
 
-    def onNewImages(self, ic):
+    def listen_image(self, ic):
         self.images_callback = ic
         
         self.bridge = CvBridge()
@@ -81,7 +81,9 @@ class ARDrone:
 
         self.reset_pub.publish(self.empty_msg)
 
-    def listen_navdata(self):
+    def listen_navdata(self, nc=None):
+        self.navdata_callback = nc
+
         self.navdata_sub = rospy.Subscriber("/ardrone/navdata", Navdata, self._navdata_callback)
 
         self.debug("Waiting for navigation data")
@@ -92,6 +94,9 @@ class ARDrone:
     def _navdata_callback(self, data):
         self.navdata = data
         self.navdata_ready = True
+
+        if self.navdata_callback is not None:
+            self.navdata_callback(data)
 
     def stop(self, period=3):
         self.move(period=period)
