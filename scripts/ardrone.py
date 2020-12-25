@@ -87,7 +87,7 @@ class ARDrone:
         self.navdata_sub = rospy.Subscriber("/ardrone/navdata", Navdata, self._navdata_callback)
 
         self.debug("Waiting for navigation data")
-        while drone.navdata_ready == False:
+        while self.navdata_ready == False:
             pass
         self.debug("Navigation data ready")
 
@@ -129,45 +129,22 @@ class ARDrone:
             print(info_str)
 
 
-def callback(cv_image):
-    cv2.imshow("Image window", cv_image)
-    cv2.waitKey(3)
-
 if __name__ == '__main__':
     
+    def callback(cv_image):
+        cv2.imshow("Image window", cv_image)
+        cv2.waitKey(3)
+
     rospy.init_node('basic_controller', anonymous=True)
     drone = ARDrone(verbose=True)
 
     try:
 
-        drone.onNewImages(callback)
+        drone.listen_image(callback)
 
         drone.listen_navdata()
+        drone.stop(period=5)
         drone.takeoff()
-        drone.stop()
-
-        s = 1
-        p = 4
-
-        speed = [s, 0, 0]
-        orient = [0, 0, 0]
-        drone.move(speed, orient, period=p)
-        drone.stop()
-
-        speed = [0, s, 0]
-        orient = [0, 0, 0]
-        drone.move(speed, orient, period=p)
-        drone.stop()
-
-        speed = [-s, 0, 0]
-        orient = [0, 0, 0]
-        drone.move(speed, orient, period=p)
-        drone.stop()
-
-        speed = [0, -s, 0]
-        orient = [0, 0, 0]
-        drone.move(speed, orient, period=p)
-        drone.stop()
 
         drone.land()
 

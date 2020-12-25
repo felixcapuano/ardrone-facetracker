@@ -1,9 +1,12 @@
 import numpy as np
 import cv2
+import os
 
+dir_path = os.path.dirname(os.path.abspath(__file__))
 
-dirFace = "/home/mammoth/catkin_ws/src/facetracker/lib/cv2/haarcascade_frontalface_default.xml"
-face_cascade = cv2.CascadeClassifier(dirFace)
+xml_data = dir_path + "/../resources/cv2/haarcascade_frontalface_default.xml"
+print(xml_data)
+face_cascade = cv2.CascadeClassifier(xml_data)
 
 def face_detection(frame):
 
