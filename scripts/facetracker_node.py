@@ -1,10 +1,26 @@
 #!/usr/bin/env python
 
 import cv2
-from face_detection_func import face_detection
+import numpy as np
+from simple_head_pos import get_heads_pos
 
-def detect_face(cv_image):
-    centers = face_detection(cv_image)
+def get_correction_dir(cv_image):
+    heads_pos = get_heads_pos(cv_image)
+    # peut etre faire la moyenne si deux tete sont detecté
+    if len(heads_pos) > 0:
+        w_head_pos, h_head_pos = heads_pos[0]
+
+        height, width, channels = cv_image.shape
+        w_img_center, h_img_center = width//2, height//2
+
+        # vecteur direction du centre par rapport a la position de la tête
+        vect = np.array([w_img_center-w_head_pos, h_head_pos-h_img_center])
+
+        # normalisation du vecteur
+        vect_norm = vect / np.sqrt(np.sum(vect**2))
+
+        print(vect_norm)
+        return vect_norm
 
 if __name__ == '__main__':
     import rospy
@@ -12,7 +28,7 @@ if __name__ == '__main__':
     from ardrone import ARDrone
     drone = ARDrone(verbose=True)
 
-    drone.listen_image(detect_face)
+    drone.listen_image(get_correction_dir)
 
     # temp
     drone.listen_navdata()

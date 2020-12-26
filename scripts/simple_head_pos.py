@@ -5,10 +5,9 @@ import os
 dir_path = os.path.dirname(os.path.abspath(__file__))
 
 xml_data = dir_path + "/../resources/cv2/haarcascade_frontalface_default.xml"
-print(xml_data)
 face_cascade = cv2.CascadeClassifier(xml_data)
 
-def face_detection(frame):
+def get_heads_pos(frame):
 
     faces = face_cascade.detectMultiScale(frame, 1.3, 5)
     centers = []
