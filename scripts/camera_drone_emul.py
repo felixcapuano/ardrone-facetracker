@@ -1,6 +1,6 @@
 import cv2
 import sys
-from facetracker_node import detect_face
+from facetracker_node import process_img
 
 cap = cv2.VideoCapture(0) 
  
@@ -9,7 +9,7 @@ while True:
     try:
         _, frame = cap.read()
 
-        detect_face(frame)
+        process_img(frame)
     except KeyboardInterrupt:
         print("interupted")
         break

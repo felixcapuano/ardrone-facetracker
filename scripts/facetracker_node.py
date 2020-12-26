@@ -4,9 +4,11 @@ import cv2
 import numpy as np
 from simple_head_pos import get_heads_pos
 
-def get_correction_dir(cv_image):
+def process_img(cv_image):
     heads_pos = get_heads_pos(cv_image)
     # peut etre faire la moyenne si deux tete sont detecté
+    vect_norm = np.zeros(2)
+
     if len(heads_pos) > 0:
         w_head_pos, h_head_pos = heads_pos[0]
 
@@ -15,12 +17,18 @@ def get_correction_dir(cv_image):
 
         # vecteur direction du centre par rapport a la position de la tête
         vect = np.array([w_img_center-w_head_pos, h_head_pos-h_img_center])
+        cv2.arrowedLine(cv_image,
+                        (w_img_center, h_img_center),
+                        (w_head_pos, h_head_pos),
+                        (255, 0, 0), 2)
 
         # normalisation du vecteur
         vect_norm = vect / np.sqrt(np.sum(vect**2))
 
-        print(vect_norm)
-        return vect_norm
+    # Display the resulting frame
+    cv2.imshow('camera', cv_image)
+    cv2.waitKey(1)
+
 
 if __name__ == '__main__':
     import rospy
@@ -28,7 +36,7 @@ if __name__ == '__main__':
     from ardrone import ARDrone
     drone = ARDrone(verbose=True)
 
-    drone.listen_image(get_correction_dir)
+    drone.listen_image(process_img)
 
     # temp
     drone.listen_navdata()

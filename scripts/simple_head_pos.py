@@ -13,11 +13,6 @@ def get_heads_pos(frame):
     centers = []
 
     for (x,y,w,h) in faces:
-        gray = cv2.rectangle(frame,(x,y),(x+w,y+h),(255,0,0),2)
         centers.append((x + w//2, y + h//2))
             
-    # Display the resulting frame
-    cv2.imshow('frame',frame)
-    cv2.waitKey(1)
-
     return centers
