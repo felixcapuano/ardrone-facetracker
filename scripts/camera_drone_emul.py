@@ -1,7 +1,6 @@
-# We Import the necessary packages needed 
-import cv2 
+import cv2
 from face_detection_func import face_detection
-
+from facetracker_node import detect_face
 
 cap = cv2.VideoCapture(0) 
  
@@ -9,7 +8,9 @@ cap = cv2.VideoCapture(0)
 while True: 
     try:
         _, frame = cap.read()  
-        face_detection(frame)
+
+        detect_face(frame)
+
         if cv2.waitKey(1) & 0xFF == ord('q'): 
             break # press esc the frame is destroyed
     except:
