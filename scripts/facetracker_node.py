@@ -16,7 +16,7 @@ def in_target(img_centre, pt):
         return False
 
 def process_img(cv_image):
-    vect_norm = np.zeros(2)
+    vect_norm = np.zeros(3)
 
     # on cherche la position des tetes sur l'image
     heads_pos = get_heads_pos(cv_image)
@@ -27,29 +27,22 @@ def process_img(cv_image):
 
     # affichage de la cible
     cv2.rectangle(cv_image,
-                  (img_center[0]-TARGET_SIZE, img_center[1]-TARGET_SIZE),
-                  (img_center[0]+TARGET_SIZE, img_center[1]+TARGET_SIZE),
-                  (0, 0, 255), 1)
+                (img_center[0]-TARGET_SIZE, img_center[1]-TARGET_SIZE),
+                (img_center[0]+TARGET_SIZE, img_center[1]+TARGET_SIZE),
+                (0, 0, 255), 1)
 
-    # si aucune tete n'est detectée
+    # si aucune tete n'est detectee
     if len(heads_pos) > 0:
         # je prend seulement la premier tete detecter ici
-        # peut etre faire la moyenne si deux tete sont detecté
+        # peut etre faire la moyenne si deux tete sont detecte
         head_pos = heads_pos[0]
 
-        # si la tete est suffisament centrée
+        # si la tete est suffisament centree
         if not in_target(img_center, head_pos):
-            print("not in target")
-
-            # vecteur direction du centre par rapport a la position de la tête
-            vect = np.array([img_center[0]-head_pos[0], head_pos[1]-img_center[1]])
-
+            # vecteur direction du centre par rapport a la position de la tete
+            vect = np.array([img_center[0]-head_pos[0], head_pos[1]-img_center[1], 0])
             # normalisation du vecteur
             vect_norm = vect / np.sqrt(np.sum(vect**2))
-
-            # publish HERE
-        else:
-            print("in target")
 
         # affichage du vecteur
         cv2.arrowedLine(cv_image,
@@ -60,19 +53,30 @@ def process_img(cv_image):
     # affiche l'image
     cv2.imshow('camera', cv_image)
     cv2.waitKey(1)
+    
+    return vect_norm
 
 if __name__ == '__main__':
     import rospy
     rospy.init_node('basic_controller', anonymous=True)
+    from geometry_msgs.msg import Point
     from ardrone import ARDrone
+
+
+    vect_pub = rospy.Publisher('correction-vect', Point, queue_size=10)
+    def image_callback(img):
+        vect = process_img(img)
+        print("publish :", vect) 
+
+        # publish HERE
+        vect_pub.publish(*vect)
+
     drone = ARDrone(verbose=True)
+    drone.listen_image(image_callback)
 
-    drone.listen_image(process_img)
-
-    # temp
+    # temporaire
     drone.listen_navdata()
     drone.takeoff()
     drone.stop()
-    
     raw_input("type enter to land")
     drone.land()
