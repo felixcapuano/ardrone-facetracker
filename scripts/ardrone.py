@@ -42,21 +42,29 @@ class ARDrone:
         self.move_pub = rospy.Publisher( "/cmd_vel", Twist, queue_size=10)  # Publish commands to drone
         self.reset_pub = rospy.Publisher( "/ardrone/reset", Empty, queue_size=10)
 
-    def move(self, speed=[0.0, 0.0, 0.0], orient=[0.0, 0.0, 0.0], period=2):
-        print("MOVE: {} seconds [direction={} , orientation={}]".format(
-            period, speed, orient))
+    def move(self, linear=[0.0, 0.0, 0.0], angular=[0.0, 0.0, 0.0], period=2):
+        if self.navdata.state in self.FLYING:
+            self.debug("MOVE: {} seconds [direction={} , orientation={}]".format(
+                period, linear, angular))
 
-        vel_msg = Twist()
+            vel_msg = Twist()
 
-        vel_msg.linear.x = speed[0]
-        vel_msg.linear.y = speed[1]
-        vel_msg.linear.z = speed[2]
+            vel_msg.linear.x = linear[0]
+            vel_msg.linear.y = linear[1]
+            vel_msg.linear.z = linear[2]
 
-        vel_msg.angular.x = orient[0]
-        vel_msg.angular.y = orient[1]
-        vel_msg.angular.z = orient[2]
+            vel_msg.angular.x = angular[0]
+            vel_msg.angular.y = angular[1]
+            vel_msg.angular.z = angular[2]
 
-        self._freeze(period, self.move_pub, vel_msg)
+            
+            self.move_pub.publish(vel_msg)
+
+            t = time.time()
+            while(time.time()-t < period):
+                self.move_pub.publish(vel_msg)
+        else:
+            self.debug("WARN: drone is not in flying state")
 
     def listen_image(self, ic):
         self.images_callback = ic
@@ -116,13 +124,6 @@ class ARDrone:
         print("LANDING: ok")
         #while self.navdata.state not in self.LANDING:
         self.landing_pub.publish(self.empty_msg)
-
-    def _freeze(self, period, pub=None, msg=None):
-        t = time.time()
-
-        while(time.time()-t < period):
-            if pub is not None and msg is not None:
-                pub.publish(msg)
 
     def debug(self, info_str):
         if self.verbose == True:

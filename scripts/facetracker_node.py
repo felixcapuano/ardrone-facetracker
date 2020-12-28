@@ -40,7 +40,7 @@ def process_img(cv_image):
         # si la tete est suffisament centree
         if not in_target(img_center, head_pos):
             # vecteur direction du centre par rapport a la position de la tete
-            vect = np.array([img_center[0]-head_pos[0], head_pos[1]-img_center[1], 0])
+            vect = np.array([0, img_center[0]-head_pos[0], -(head_pos[1]-img_center[1])])
             # normalisation du vecteur
             vect_norm = vect / np.sqrt(np.sum(vect**2))
 
@@ -58,12 +58,12 @@ def process_img(cv_image):
 
 if __name__ == '__main__':
     import rospy
-    rospy.init_node('basic_controller', anonymous=True)
+    rospy.init_node('face_tracker', anonymous=True)
     from geometry_msgs.msg import Point
     from ardrone import ARDrone
 
 
-    vect_pub = rospy.Publisher('correction-vect', Point, queue_size=10)
+    vect_pub = rospy.Publisher('facetracker', Point, queue_size=10)
     def image_callback(img):
         vect = process_img(img)
         print("publish :", vect) 
@@ -74,9 +74,4 @@ if __name__ == '__main__':
     drone = ARDrone(verbose=True)
     drone.listen_image(image_callback)
 
-    # temporaire
-    drone.listen_navdata()
-    drone.takeoff()
-    drone.stop()
-    raw_input("type enter to land")
-    drone.land()
+    rospy.spin()
