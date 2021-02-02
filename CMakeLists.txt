@@ -161,9 +161,8 @@ include_directories(
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS
-  scripts/image_reader.py
-  scripts/face_detection.py
-  scripts/face_detection_func.py
+  scripts/controller_node.py
+  scripts/facetracker_node.py
   scripts/ardrone.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
