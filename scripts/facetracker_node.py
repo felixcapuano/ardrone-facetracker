@@ -40,7 +40,7 @@ def process_img(cv_image):
         # si la tete est suffisament centree
         if not in_target(img_center, head_pos):
             # vecteur direction du centre par rapport a la position de la tete
-            vect = np.array([0, img_center[0]-head_pos[0], -(head_pos[1]-img_center[1])])
+            vect = np.array([0, img_center[0]-head_pos[0], head_pos[1]-img_center[1]])
             # normalisation du vecteur
             vect_norm = vect / np.sqrt(np.sum(vect**2))
 
