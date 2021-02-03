@@ -2,7 +2,8 @@
 
 import cv2
 import numpy as np
-from simple_head_pos import get_heads_pos
+#from simple_head_pos import get_heads_pos
+from best_head_pos import get_heads_pos
 
 TARGET_SIZE = 20
 
@@ -31,7 +32,7 @@ def process_img(cv_image):
                 (img_center[0]+TARGET_SIZE, img_center[1]+TARGET_SIZE),
                 (0, 0, 255), 1)
 
-    # si aucune tete n'est detectee
+    # si une tete n'est detectee
     if len(heads_pos) > 0:
         # je prend seulement la premier tete detecter ici
         # peut etre faire la moyenne si deux tete sont detecte

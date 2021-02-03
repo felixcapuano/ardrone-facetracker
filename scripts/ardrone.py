@@ -57,12 +57,12 @@ class ARDrone:
             vel_msg.angular.y = angular[1]
             vel_msg.angular.z = angular[2]
 
-            
             self.move_pub.publish(vel_msg)
 
             t = time.time()
             while(time.time()-t < period):
-                self.move_pub.publish(vel_msg)
+                #self.move_pub.publish(vel_msg)
+                time.sleep(0.01)
         else:
             self.debug("WARN: drone is not in flying state")
 
@@ -137,14 +137,12 @@ if __name__ == '__main__':
     rospy.init_node('basic_controller', anonymous=True)
     drone = ARDrone(verbose=True)
     drone.listen_navdata()
-    drone.takeoff()
 
     speed = 0.2
     linear = [0, 0, 0]
     angular = [0, 0, 0]
     while True:
         k = readkey()
-
         if k == key.UP:
             print('forward')
             linear = [speed, 0, 0]
@@ -172,8 +170,14 @@ if __name__ == '__main__':
         elif k == key.SPACE:
             print('stop')
             linear = [0, 0, 0]
-        elif k == 'q':
+        elif k == 't':
+            print('take off')
+            drone.takeoff()
+        elif k == 'l':
             print('land')
+            drone.land()
+        elif k == 'q':
+            print('quit')
             drone.land()
             break
 

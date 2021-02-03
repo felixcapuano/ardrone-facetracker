@@ -7,8 +7,8 @@ from ardrone import ARDrone
 import time
 
 
-time_speed = 2
-move_speed = 0.05
+time_speed = 0.5
+move_speed = 0.1
 
 def controller(linear, angular):   
 
@@ -16,30 +16,26 @@ def controller(linear, angular):
     horizontal_linear = [0, 0, 0]
     
     p_y = abs(linear[1] * time_speed)
-    
     if linear[1] > 0:
-        horizontal_linear = [move_speed, 0, 0]
+        horizontal_linear = [0, move_speed, 0]
     else:
         horizontal_linear = [0, -move_speed, 0]
     drone.move(horizontal_linear, angular, period=p_y)
 
     p_z = abs(linear[2] * time_speed)
-    if linear[2] > 0:
+    if linear[2] < 0:
         vertical_linear = [0, 0, move_speed]
     else:
         vertical_linear = [0, 0, -move_speed]
     drone.move(vertical_linear, angular, period=p_z)
 
-    drone.stop()
+    drone.stop(period=0)
 
 def ft_callback(v):
-    linear = [0, 0, 0]
     angular = [0, 0, 0]
-
     linear = [v.x, v.y, v.z]
+
     if linear != [0, 0, 0]:
-        print(linear)
-        time.sleep(2)
         controller(linear, angular)
 
 drone = ARDrone(verbose=True)
