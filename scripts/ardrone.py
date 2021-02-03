@@ -131,23 +131,51 @@ class ARDrone:
 
 
 if __name__ == '__main__':
-    
-    def callback(cv_image):
-        cv2.imshow("Image window", cv_image)
-        cv2.waitKey(3)
+
+    from readchar import readkey, key
 
     rospy.init_node('basic_controller', anonymous=True)
     drone = ARDrone(verbose=True)
+    drone.listen_navdata()
+    drone.takeoff()
 
-    try:
+    speed = 0.2
+    linear = [0, 0, 0]
+    angular = [0, 0, 0]
+    while True:
+        k = readkey()
 
-        drone.listen_image(callback)
+        if k == key.UP:
+            print('forward')
+            linear = [speed, 0, 0]
+        elif k == key.DOWN:
+            print('backward')
+            linear = [-speed, 0, 0]
+        elif k == key.RIGHT:
+            print('right')
+            linear = [0, -speed, 0]
+        elif k == key.LEFT:
+            print('left')
+            linear = [0, speed, 0]
+        elif k == key.LEFT:
+            print('left')
+            linear = [0, speed, 0]
+        elif k == key.LEFT:
+            print('left')
+            linear = [0, speed, 0]
+        elif k == 'u':
+            print('up')
+            linear = [0, 0, speed]
+        elif k == 'd':
+            print('down')
+            linear = [0, 0, -speed]
+        elif k == key.SPACE:
+            print('stop')
+            linear = [0, 0, 0]
+        elif k == 'q':
+            print('land')
+            drone.land()
+            break
 
-        drone.listen_navdata()
-        drone.stop(period=5)
-        drone.takeoff()
+        drone.move(linear, angular, period=0)
 
-        drone.land()
-
-    except KeyboardInterrupt:
-        drone.land()
