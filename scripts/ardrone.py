@@ -64,7 +64,7 @@ class ARDrone:
                 #self.move_pub.publish(vel_msg)
                 time.sleep(0.01)
         else:
-            self.debug("WARN: drone is not in flying state")
+            self.debug("MOVE: drone is not in flying state")
 
     def listen_image(self, ic):
         self.images_callback = ic
@@ -76,17 +76,13 @@ class ARDrone:
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
-                print(e)
+            print(e)
 
-        (rows,cols,channels) = cv_image.shape
-        if cols > 60 and rows > 60 :
-            cv2.circle(cv_image, (50,50), 10, 255)
-        
         if self.images_callback is not None:
             self.images_callback(cv_image)
 
     def reset(self):
-
+        self.debut('RESET')
         self.reset_pub.publish(self.empty_msg)
 
     def listen_navdata(self, nc=None):
@@ -94,10 +90,10 @@ class ARDrone:
 
         self.navdata_sub = rospy.Subscriber("/ardrone/navdata", Navdata, self._navdata_callback)
 
-        self.debug("Waiting for navigation data")
+        self.debug("Waiting for navigation data...")
         while self.navdata_ready == False:
             pass
-        self.debug("Navigation data ready")
+        self.debug("Navigation data ready!")
 
     def _navdata_callback(self, data):
         self.navdata = data
@@ -110,20 +106,25 @@ class ARDrone:
         self.move(period=period)
 
     def takeoff(self):
-        self.debug("TAKE OFF: starting")
+        if self.navdata.state in self.LANDED:
+            self.debug("TAKE OFF: starting")
+            while self.navdata.state not in self.TAKINGOFF:
+                self.takeoff_pub.publish(self.empty_msg)
 
-        while self.navdata.state not in self.TAKINGOFF:
-            self.takeoff_pub.publish(self.empty_msg)
-
-        self.debug("TAKE OFF: in progress")
-        while self.navdata.state in self.TAKINGOFF:
-            pass
-        self.debug("TAKE OFF: end")
+            self.debug("TAKE OFF: in progress")
+            while self.navdata.state in self.TAKINGOFF:
+                pass
+            self.debug("TAKE OFF: end")
+        else:
+            self.debug("TAKE OFF: drone not landed")
 
     def land(self):
-        print("LANDING: ok")
-        #while self.navdata.state not in self.LANDING:
-        self.landing_pub.publish(self.empty_msg)
+        if self.navdata.state not in self.LANDED:
+            self.debug("LANDING: ok")
+            #while self.navdata.state not in self.LANDING:
+            self.landing_pub.publish(self.empty_msg)
+        else: 
+            self.debug("LANDING: drone already landed")
 
     def debug(self, info_str):
         if self.verbose == True:
@@ -143,43 +144,63 @@ if __name__ == '__main__':
     angular = [0, 0, 0]
     while True:
         k = readkey()
-        if k == key.UP:
-            print('forward')
+        if k == 'z':
             linear = [speed, 0, 0]
-        elif k == key.DOWN:
-            print('backward')
+            angular = [0, 0, 0]
+        elif k == 's':
             linear = [-speed, 0, 0]
-        elif k == key.RIGHT:
-            print('right')
-            linear = [0, -speed, 0]
-        elif k == key.LEFT:
-            print('left')
-            linear = [0, speed, 0]
-        elif k == key.LEFT:
-            print('left')
-            linear = [0, speed, 0]
-        elif k == key.LEFT:
-            print('left')
-            linear = [0, speed, 0]
-        elif k == 'u':
-            print('up')
-            linear = [0, 0, speed]
+            angular = [0, 0, 0]
         elif k == 'd':
-            print('down')
-            linear = [0, 0, -speed]
-        elif k == key.SPACE:
-            print('stop')
+            linear = [0, -speed, 0]
+            angular = [0, 0, 0]
+        elif k == 'q':
+            linear = [0, speed, 0]
+            angular = [0, 0, 0]
+        elif k == key.LEFT:
             linear = [0, 0, 0]
+            angular = [0, 0, speed]
+        elif k == key.RIGHT:
+            linear = [0, 0, 0]
+            angular = [0, 0, -speed]
+        elif k == key.UP:
+            linear = [0, 0, speed]
+            angular = [0, 0, 0]
+        elif k == key.DOWN:
+            linear = [0, 0, -speed]
+            angular = [0, 0, 0]
+        elif k == key.SPACE:
+            linear = [0, 0, 0]
+            angular = [0, 0, 0]
         elif k == 't':
-            print('take off')
             drone.takeoff()
         elif k == 'l':
-            print('land')
             drone.land()
-        elif k == 'q':
-            print('quit')
+        elif k == key.SUPR:
             drone.land()
+            print('QUIT')
             break
+        elif k == 'h':
+            print('''
+help        h
+quit        suppr
+
+-State:
+takeoff     t
+land        l
+hover/stop  space
+
+-Translation:
+up          up_arrow
+down        down_arrow
+forward     z
+backward    s
+left        q
+right       d
+
+-Rotation:
+left        left_arrow
+right       right_arrow
+            ''')
 
         drone.move(linear, angular, period=0)
 
