@@ -17,12 +17,9 @@ def in_target(img_centre, pt):
         return False
 
 def process_img(cv_image):
-    vect_norm = np.zeros(3)
+    data = np.zeros(4)
 
-    # on cherche la position des tetes sur l'image
-    heads_pos = get_heads_pos(cv_image)
-
-    # on calcule le centre de l'image
+    # on cherche le centre de l'image
     height, width, _ = cv_image.shape
     img_center = (width//2, height//2)
 
@@ -32,45 +29,51 @@ def process_img(cv_image):
                 (img_center[0]+TARGET_SIZE, img_center[1]+TARGET_SIZE),
                 (0, 0, 255), 1)
 
+    # on cherche la position des tetes sur l'image
+    face_pos_x, face_pos_y, face_size = get_heads_pos(cv_image)
+
     # si une tete n'est detectee
-    if len(heads_pos) > 0:
+    if face_size != 0:
         # je prend seulement la premier tete detecter ici
         # peut etre faire la moyenne si deux tete sont detecte
-        head_pos = heads_pos[0]
 
         # si la tete est suffisament centree
-        if not in_target(img_center, head_pos):
+        if not in_target(img_center, (face_pos_x, face_pos_y)):
             # vecteur direction du centre par rapport a la position de la tete
-            vect = np.array([0, img_center[0]-head_pos[0], head_pos[1]-img_center[1]])
+            vect = np.array([0, img_center[0]-face_pos_x, face_pos_y-img_center[1], 0])
             # normalisation du vecteur
-            vect_norm = vect / np.sqrt(np.sum(vect**2))
+            data = vect / np.sqrt(np.sum(vect**2))
 
         # affichage du vecteur
         cv2.arrowedLine(cv_image,
                         (img_center[0], img_center[1]),
-                        (head_pos[0], head_pos[1]),
+                        (face_pos_x, face_pos_y),
                         (255, 0, 0), 2)
 
     # affiche l'image
     cv2.imshow('camera', cv_image)
     cv2.waitKey(1)
     
-    return vect_norm
+    # on ajoute la taille du visage
+    data[3] = face_size
+    
+    return data
 
 if __name__ == '__main__':
     import rospy
     rospy.init_node('face_tracker', anonymous=True)
-    from geometry_msgs.msg import Point
+    from geometry_msgs.msg import Quaternion
     from ardrone import ARDrone
 
+    vect_pub = rospy.Publisher('facetracker', Quaternion, queue_size=10)
 
-    vect_pub = rospy.Publisher('facetracker', Point, queue_size=10)
     def image_callback(img):
-        vect = process_img(img)
-        print("publish :", vect) 
+        msg = process_img(img)
 
         # publish HERE
-        vect_pub.publish(*vect)
+        if msg[3] != 0:
+            print("publish :", msg) 
+            vect_pub.publish(*msg)
 
     drone = ARDrone(verbose=True)
     drone.listen_image(image_callback)

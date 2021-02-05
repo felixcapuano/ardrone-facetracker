@@ -2,7 +2,7 @@
 
 import rospy
 rospy.init_node('controller', anonymous=True)
-from geometry_msgs.msg import Point
+from geometry_msgs.msg import Quaternion
 from ardrone import ARDrone
 import time
 
@@ -43,7 +43,7 @@ drone.listen_navdata()
 drone.takeoff()
 
 ft_sub = rospy.Subscriber('facetracker',
-                            Point,
+                            Quaternion,
                             ft_callback,
                             queue_size=1)
 
