@@ -5,7 +5,7 @@ import numpy as np
 #from simple_head_pos import get_heads_pos
 from best_head_pos import get_heads_pos
 
-TARGET_SIZE = 20
+TARGET_SIZE = 10
 
 def in_target(img_centre, pt):
     if img_centre[0]+TARGET_SIZE > pt[0] and \
