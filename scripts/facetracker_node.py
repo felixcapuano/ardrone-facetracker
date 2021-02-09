@@ -61,7 +61,7 @@ def process_img(cv_image):
 
 if __name__ == '__main__':
     import rospy
-    rospy.init_node('face_tracker', anonymous=True)
+    rospy.init_node('facetracker_node', anonymous=True)
     from geometry_msgs.msg import Quaternion
     from ardrone import ARDrone
 

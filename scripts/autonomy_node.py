@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-rospy.init_node('controller', anonymous=True)
+rospy.init_node('autonomy_node', anonymous=True)
 from geometry_msgs.msg import Quaternion
 from ardrone import ARDrone
 import time
@@ -13,13 +13,14 @@ move_speed = 0.1
 rot_speed = 0.1
 
 x_move_speed = 0.1
+head_size_target = 85
+head_size_delta = 5
 
 def controller(vector):   
-
     x_move = 0
-    if vector.w < 80:
+    if vector.w < (head_size_target-head_size_delta):
         x_move = x_move_speed
-    elif vector.w > 90:
+    elif vector.w > (head_size_target+head_size_delta):
         x_move = -x_move_speed
         
 

@@ -1,55 +1,75 @@
 #!/usr/bin/env python
 
 import rospy
-rospy.init_node('controller', anonymous=True)
-from geometry_msgs.msg import Quaternion
 from ardrone import ARDrone
-import time
+from readchar import readkey, key
 
-
-time_speed = 0.5
-move_speed = 0.1
-
-def controller(linear, angular):   
-
-    vertical_linear = [0, 0, 0]
-    horizontal_linear = [0, 0, 0]
-    
-    p_y = abs(linear[1] * time_speed)
-    if linear[1] > 0:
-        horizontal_linear = [0, move_speed, 0]
-    else:
-        horizontal_linear = [0, -move_speed, 0]
-    drone.move(horizontal_linear, angular, period=p_y)
-
-    p_z = abs(linear[2] * time_speed)
-    if linear[2] < 0:
-        vertical_linear = [0, 0, move_speed]
-    else:
-        vertical_linear = [0, 0, -move_speed]
-    drone.move(vertical_linear, angular, period=p_z)
-
-    drone.stop(period=0)
-
-def ft_callback(v):
-    angular = [0, 0, 0]
-    linear = [v.x, v.y, v.z]
-
-    if linear != [0, 0, 0]:
-        controller(linear, angular)
-
+rospy.init_node('controller_node', anonymous=True)
 drone = ARDrone(verbose=True)
 drone.listen_navdata()
-drone.takeoff()
 
-ft_sub = rospy.Subscriber('facetracker',
-                            Quaternion,
-                            ft_callback,
-                            queue_size=1)
+speed = 0.2
+linear = [0, 0, 0]
+angular = [0, 0, 0]
+while True:
+    k = readkey()
+    if k == 'z':
+        linear = [speed, 0, 0]
+        angular = [0, 0, 0]
+    elif k == 's':
+        linear = [-speed, 0, 0]
+        angular = [0, 0, 0]
+    elif k == 'd':
+        linear = [0, -speed, 0]
+        angular = [0, 0, 0]
+    elif k == 'q':
+        linear = [0, speed, 0]
+        angular = [0, 0, 0]
+    elif k == key.LEFT:
+        linear = [0, 0, 0]
+        angular = [0, 0, speed]
+    elif k == key.RIGHT:
+        linear = [0, 0, 0]
+        angular = [0, 0, -speed]
+    elif k == key.UP:
+        linear = [0, 0, speed]
+        angular = [0, 0, 0]
+    elif k == key.DOWN:
+        linear = [0, 0, -speed]
+        angular = [0, 0, 0]
+    elif k == key.SPACE:
+        linear = [0, 0, 0]
+        angular = [0, 0, 0]
+    elif k == 't':
+        drone.takeoff()
+    elif k == 'l':
+        drone.land()
+    elif k == key.SUPR:
+        drone.land()
+        print('QUIT')
+        break
+    elif k == 'h':
+        print('''
+help        h
+quit        suppr
 
-rospy.spin()
+-State:
+takeoff     t
+land        l
+hover/stop  space
 
-#raw_input("type enter to land")
-drone.land()
+-Translation:
+up          up_arrow
+down        down_arrow
+forward     z
+backward    s
+left        q
+right       d
 
+-Rotation:
+left        left_arrow
+right       right_arrow
+        ''')
+
+    drone.move(linear, angular, period=0)
 
